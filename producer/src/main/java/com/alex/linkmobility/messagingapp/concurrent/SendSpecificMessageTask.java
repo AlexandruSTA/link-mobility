@@ -13,33 +13,35 @@ import java.util.stream.Stream;
 import static com.alex.linkmobility.messagingapp.commons.constant.RabbitMQConstants.*;
 
 @Component
-public class SendMessageTask implements Runnable {
+public class SendSpecificMessageTask implements Runnable {
 
-    private static final Logger LOGGER = LogManager.getLogger(SendMessageTask.class);
+    private static final Logger LOGGER = LogManager.getLogger(SendSpecificMessageTask.class);
+
+    private final Message message;
 
     private final RabbitTemplate rabbitTemplate;
 
-    public SendMessageTask(RabbitTemplate rabbitTemplate) {
+    public SendSpecificMessageTask(RabbitTemplate rabbitTemplate, Message message) {
         this.rabbitTemplate = rabbitTemplate;
+        this.message = message;
     }
 
     public void run() {
         try {
-            Message toSend = new Message();
-            AtomicReference<String> routingKey = new AtomicReference<>("message-key");
             LOGGER.info("Sending the message...");
-            LOGGER.info("\n*********CONTENT*********\n{}\n*********CONTENT*********\n", toSend.toString());
+            LOGGER.info("\n*********CONTENT*********\n{}\n*********CONTENT*********\n", message.toString());
+            AtomicReference<String> routingKey = new AtomicReference<>("message-key");
             Stream.of(
                             MESSAGE_ROUTING_KEY_RECIPIENTS_A.value(),
                             MESSAGE_ROUTING_KEY_RECIPIENTS_B.value(),
                             MESSAGE_ROUTING_KEY_RECIPIENTS_C.value())
-                    .filter(t -> Character.toLowerCase(t.charAt(t.length() - 1)) == Character.toLowerCase(toSend.getRecipient().charAt(0)))
+                    .filter(t -> Character.toLowerCase(t.charAt(t.length() - 1)) == Character.toLowerCase(message.getRecipient().charAt(0)))
                     .findFirst().ifPresent(routingKey::set);
 
             rabbitTemplate.convertAndSend(
                     TOPIC_EXCHANGE_NAME.value(),
                     routingKey.get(),
-                    toSend);
+                    message);
             LOGGER.info("Message sent!");
         } catch (AmqpException exception) {
             LOGGER.error("Received AMQP Exception: {}", String.valueOf(exception));

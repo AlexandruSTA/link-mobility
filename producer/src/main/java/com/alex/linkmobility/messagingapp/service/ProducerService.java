@@ -1,6 +1,8 @@
 package com.alex.linkmobility.messagingapp.service;
 
 import com.alex.linkmobility.messagingapp.concurrent.SendMessageTask;
+import com.alex.linkmobility.messagingapp.concurrent.SendSpecificMessageTask;
+import com.alex.linkmobility.messagingapp.domain.Message;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -35,18 +37,27 @@ public class ProducerService implements Produceable {
                     TimeUnit.SECONDS);
         }
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            LOGGER.info("Invoking shutdown hook...");
-            LOGGER.info("Shutting down thread pool...");
-            executorService.shutdown();
-            try {
-                while (!executorService.awaitTermination(10, TimeUnit.SECONDS)) ;
-            } catch (InterruptedException e) {
-                LOGGER.error("Interrupted while waiting for termination");
-            }
-            LOGGER.info("Thread pool shut down.");
-            LOGGER.info("Done with shutdown hook.");
-        }));
+        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
+    }
+
+    @Override
+    public void produceMessage(Message message) {
+        executorService.submit(new SendSpecificMessageTask(rabbitTemplate, message));
+
+        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
+    }
+
+    private void shutdown() {
+        LOGGER.info("Invoking shutdown hook...");
+        LOGGER.info("Shutting down thread pool...");
+        executorService.shutdown();
+        try {
+            while (!executorService.awaitTermination(10, TimeUnit.SECONDS)) ;
+        } catch (InterruptedException e) {
+            LOGGER.error("Interrupted while waiting for termination");
+        }
+        LOGGER.info("Thread pool shut down.");
+        LOGGER.info("Done with shutdown hook.");
     }
 
 }

@@ -1,7 +1,6 @@
 package com.alex.linkmobility.messagingapp.domain;
 
 import lombok.Data;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
@@ -18,15 +17,6 @@ public class Message implements Serializable {
     private String recipient;
 
     private String message;
-
-    public static Message generateRandomMessage() {
-        Message toBuild = new Message();
-        toBuild.id = UUID.randomUUID();
-        toBuild.sender = RandomStringUtils.randomAlphanumeric(10);
-        toBuild.recipient = RandomStringUtils.random(1, "ABC") + RandomStringUtils.randomAlphanumeric(5);
-        toBuild.message = RandomStringUtils.randomAlphanumeric(20);
-        return toBuild;
-    }
 
     @Override
     public String toString() {

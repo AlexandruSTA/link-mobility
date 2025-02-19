@@ -6,9 +6,13 @@ public enum RabbitMQConstants implements Serializable {
 
     TOPIC_EXCHANGE_NAME("message-exchange"),
 
-    QUEUE_NAME("message-queue"),
+    QUEUE_RECIPIENTS_A_NAME("message-queue-recipients-a"),
+    QUEUE_RECIPIENTS_B_NAME("message-queue-recipients-b"),
+    QUEUE_RECIPIENTS_C_NAME("message-queue-recipients-c"),
 
-    MESSAGE_KEY("message-key");
+    MESSAGE_ROUTING_KEY_RECIPIENTS_A("message-routing-key-a"),
+    MESSAGE_ROUTING_KEY_RECIPIENTS_B("message-routing-key-b"),
+    MESSAGE_ROUTING_KEY_RECIPIENTS_C("message-routing-key-c");
 
     private final String value;
 

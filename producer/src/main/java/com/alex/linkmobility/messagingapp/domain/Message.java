@@ -11,22 +11,13 @@ import java.util.UUID;
 @Component
 public class Message implements Serializable {
 
-    private UUID id;
+    private UUID id = UUID.randomUUID();
 
-    private String sender;
+    private String sender = RandomStringUtils.randomAlphanumeric(10);
 
-    private String recipient;
+    private String recipient = RandomStringUtils.random(1, "ABC") + RandomStringUtils.randomAlphanumeric(5);
 
-    private String message;
-
-    public static Message generateRandomMessage() {
-        Message toBuild = new Message();
-        toBuild.id = UUID.randomUUID();
-        toBuild.sender = RandomStringUtils.randomAlphanumeric(10);
-        toBuild.recipient = RandomStringUtils.random(1, "ABC") + RandomStringUtils.randomAlphanumeric(5);
-        toBuild.message = RandomStringUtils.randomAlphanumeric(20);
-        return toBuild;
-    }
+    private String message = RandomStringUtils.randomAlphanumeric(20);
 
     @Override
     public String toString() {

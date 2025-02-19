@@ -16,7 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static com.alex.linkmobility.messagingapp.commons.constant.RabbitMQConstants.QUEUE_NAME;
+import static com.alex.linkmobility.messagingapp.commons.constant.RabbitMQConstants.*;
 
 
 @Getter
@@ -27,7 +27,9 @@ public class ConsumerService implements Consumable {
 
     private static final int THREADS_NUMBER = 10;
 
-    private final ExecutorService executorService = Executors.newFixedThreadPool(THREADS_NUMBER);
+    private final ExecutorService executorServiceA = Executors.newFixedThreadPool(THREADS_NUMBER);
+    private final ExecutorService executorServiceB = Executors.newFixedThreadPool(THREADS_NUMBER);
+    private final ExecutorService executorServiceC = Executors.newFixedThreadPool(THREADS_NUMBER);
 
     @Value("${rabbitmq.host}")
     private String host;
@@ -52,26 +54,40 @@ public class ConsumerService implements Consumable {
 
         LOGGER.info("Waiting for messages...");
 
-        registerConsumer(channel, executorService, objectMapper);
+        handleConsumer(channel, executorServiceA, QUEUE_RECIPIENTS_A_NAME.value(), objectMapper);
+        handleConsumer(channel, executorServiceB, QUEUE_RECIPIENTS_B_NAME.value(), objectMapper);
+        handleConsumer(channel, executorServiceC, QUEUE_RECIPIENTS_C_NAME.value(), objectMapper);
+    }
+
+    private void handleConsumer(Channel channel, ExecutorService executorService, String queueName, ObjectMapper objectMapper) throws IOException {
+        registerConsumer(channel, queueName, executorService, objectMapper);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            LOGGER.info("Invoking shutdown hook...");
-            LOGGER.info("Shutting down thread pool...");
-            executorService.shutdown();
             try {
-                connection.close();
-                while (!executorService.awaitTermination(10, TimeUnit.SECONDS)) ;
-            } catch (InterruptedException e) {
-                LOGGER.error("Interrupted while waiting for termination");
+                this.shutdown(executorService);
             } catch (IOException e) {
-                LOGGER.error("Cannot close the connection.");
+                throw new RuntimeException(e);
             }
-            LOGGER.info("Thread pool shut down.");
-            LOGGER.info("Done with shutdown hook.");
         }));
     }
 
+    private void shutdown(ExecutorService executorService) throws IOException {
+        LOGGER.info("Invoking shutdown hook...");
+        LOGGER.info("Shutting down thread pool...");
+        executorServiceA.shutdown();
+        executorServiceB.shutdown();
+        executorServiceC.shutdown();
+        try {
+            while (!executorService.awaitTermination(10, TimeUnit.SECONDS)) ;
+        } catch (InterruptedException e) {
+            LOGGER.error("Interrupted while waiting for termination");
+        }
+        LOGGER.info("Thread pool shut down.");
+        LOGGER.info("Done with shutdown hook.");
+    }
+
     private static void registerConsumer(final Channel channel,
+                                         final String queue,
                                          final ExecutorService executorService,
                                          final ObjectMapper objectMapper)
             throws IOException {
@@ -90,7 +106,7 @@ public class ConsumerService implements Consumable {
                 }
             }
         };
-        channel.basicConsume(QUEUE_NAME.value(), true /* auto-ack */, consumer);
+        channel.basicConsume(queue, true /* auto-ack */, consumer);
     }
 
 }
