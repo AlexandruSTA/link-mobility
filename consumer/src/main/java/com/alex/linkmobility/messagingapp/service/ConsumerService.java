@@ -74,9 +74,7 @@ public class ConsumerService implements Consumable {
     private void shutdown(ExecutorService executorService) throws IOException {
         LOGGER.info("Invoking shutdown hook...");
         LOGGER.info("Shutting down thread pool...");
-        executorServiceA.shutdown();
-        executorServiceB.shutdown();
-        executorServiceC.shutdown();
+        executorService.shutdown();
         try {
             while (!executorService.awaitTermination(10, TimeUnit.SECONDS)) ;
         } catch (InterruptedException e) {
